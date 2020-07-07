@@ -1,0 +1,66 @@
+import { WebPlugin } from '@capacitor/core';
+import { CapFeathersPluginPlugin } from './definitions';
+// serveur featherjs with socket.io and rest services
+const server = require('../server/src/server');
+
+export class CapFeathersPluginWeb extends WebPlugin implements CapFeathersPluginPlugin {
+  
+  serverRef: any = null;
+  feathersRef: any = null;
+  port: number = null;
+  start: boolean = null;
+
+  constructor() {
+    super({
+      name: 'CapFeathersPlugin',
+      platforms: ['electron']
+    });
+
+    //this.serverRef = require('../server/src/server');
+    this.feathersRef = new server();
+    this.port = this.feathersRef.getListenPort();
+    this.start = this.feathersRef.isStart();
+  }
+
+  async echo(options: { value: string }): Promise<{value: string}> {
+    console.log('ECHO', options);
+    return options;
+  }
+
+  async startServer(): Promise<void> {
+    this.feathersRef.startServer();
+  }
+
+  async stopServer(): Promise<void> {
+    this.feathersRef.stopServer();
+  }
+
+  async getListenPort(): Promise<number> {
+    return this.feathersRef.getListenPort();
+  }
+  
+
+  async isStart(): Promise<boolean> {    
+    return this.feathersRef.isStart();
+    
+  }
+
+  getFeathersRef(): any {
+    return this.feathersRef;
+  }
+
+  async changePort(port: number): Promise<void> {
+    this.feathersRef.changePort(port);
+    
+  }
+
+  
+
+}
+
+const CapFeathersPlugin = new CapFeathersPluginWeb();
+
+export { CapFeathersPlugin };
+
+import { registerWebPlugin } from '@capacitor/core';
+registerWebPlugin(CapFeathersPlugin);
