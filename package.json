@@ -1,6 +1,6 @@
 {
   "name": "cap-feathersjs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Capacitor Fethersjs Electron Integration",
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",

@@ -46,6 +46,16 @@ export class CapFeathersPluginWeb extends WebPlugin {
             return res;
         });
     }
+    setConfig(param, value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.feathersRef.app.set(param, value);
+        });
+    }
+    getConfig(param) {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.feathersRef.app.get(param);
+        });
+    }
     getFeathersRef() {
         return this.feathersRef;
     }

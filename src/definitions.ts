@@ -11,5 +11,7 @@ export interface CapFeathersPluginPlugin {
   changePort(port: number): Promise<void>;
   isStart(): Promise<boolean>;
   getFeathersRef(): any;
+  setConfig(param:string,value:any): Promise<void>;
+  getConfig(param:string): Promise<void>;
   getListenPort(): Promise<number>;
 }

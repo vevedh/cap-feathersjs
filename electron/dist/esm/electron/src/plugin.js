@@ -77,6 +77,26 @@ export class CapFeathersPluginWeb extends WebPlugin {
     getFeathersRef() {
         return this.feathersRef;
     }
+    setConfig(param, value) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.hasFeathers()) {
+                app.set(param, value);
+            }
+            else {
+                console.log('You must generate featherjs app with name server in electron folder!!');
+            }
+        });
+    }
+    getConfig(param) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (this.hasFeathers()) {
+                app.get(param);
+            }
+            else {
+                console.log('You must generate featherjs app with name server in electron folder!!');
+            }
+        });
+    }
     changePort(port) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.hasFeathers()) {

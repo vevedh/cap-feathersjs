@@ -41,6 +41,19 @@ export class CapFeathersPluginWeb extends WebPlugin implements CapFeathersPlugin
     return res;
   }
 
+  async setConfig(param:string,value:any): Promise<void> {
+   
+    this.feathersRef.app.set(param,value);
+   
+  }
+
+
+  async getConfig(param:string): Promise<void> {
+    
+    this.feathersRef.app.get(param);
+    
+  }
+
   getFeathersRef(): any {
     return this.feathersRef;
   }

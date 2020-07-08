@@ -80,6 +80,24 @@ export class CapFeathersPluginWeb extends WebPlugin implements CapFeathersPlugin
     return this.feathersRef;
   }
 
+
+  async setConfig(param:string,value:any): Promise<void> {
+    if (this.hasFeathers()) {
+      app.set(param,value);
+    } else {
+      console.log('You must generate featherjs app with name server in electron folder!!')
+    }
+  }
+
+
+  async getConfig(param:string): Promise<void> {
+    if (this.hasFeathers()) {
+      app.get(param);
+    } else {
+      console.log('You must generate featherjs app with name server in electron folder!!')
+    }
+  }
+
   async changePort(port: number): Promise<void> {
     if (this.hasFeathers()) {
       app.set('port',port);

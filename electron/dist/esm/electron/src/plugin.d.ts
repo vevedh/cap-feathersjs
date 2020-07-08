@@ -20,6 +20,8 @@ export declare class CapFeathersPluginWeb extends WebPlugin implements CapFeathe
     getListenPort(): Promise<number>;
     isStart(): Promise<boolean>;
     getFeathersRef(): any;
+    setConfig(param: string, value: any): Promise<void>;
+    getConfig(param: string): Promise<void>;
     changePort(port: number): Promise<void>;
 }
 declare const CapFeathersPlugin: CapFeathersPluginWeb;
