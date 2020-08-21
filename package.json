@@ -1,6 +1,6 @@
 {
   "name": "cap-feathersjs",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Capacitor Fethersjs Electron Integration",
   "main": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
@@ -53,9 +53,6 @@
     "electron": {
       "src": "electron/dist/plugin.js"
     }
-  },
-  "publishConfig": { 
-    "registry": "https://npm.pkg.github.com/" 
   },
   "repository": {
     "type": "git",
