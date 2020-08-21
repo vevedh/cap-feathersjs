@@ -1,4 +1,5 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
+//import copy from 'rollup-plugin-copy';
 
 export default {
   input: 'dist/esm/index.js',

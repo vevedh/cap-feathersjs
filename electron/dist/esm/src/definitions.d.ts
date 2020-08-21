@@ -9,6 +9,7 @@ export interface CapFeathersPluginPlugin {
     }): Promise<{
         value: string;
     }>;
+    setFeathersPath(chemin: string): Promise<void>;
     startServer(): Promise<void>;
     stopServer(): Promise<void>;
     changePort(port: number): Promise<void>;

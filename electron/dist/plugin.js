@@ -549,17 +549,25 @@ var capacitorPlugin = (function (exports) {
                 var _this = this;
                 return __generator(this, function (_a) {
                     return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                            var cameraModal;
+                            var cameraModal_1, e_1;
                             var _this = this;
                             return __generator(this, function (_a) {
                                 switch (_a.label) {
                                     case 0:
-                                        cameraModal = document.createElement('pwa-camera-modal');
-                                        document.body.appendChild(cameraModal);
-                                        return [4 /*yield*/, cameraModal.componentOnReady()];
+                                        if (!options.webUseInput) return [3 /*break*/, 1];
+                                        this.fileInputExperience(options, resolve);
+                                        return [3 /*break*/, 7];
                                     case 1:
+                                        if (!customElements.get('pwa-camera-modal')) return [3 /*break*/, 6];
+                                        cameraModal_1 = document.createElement('pwa-camera-modal');
+                                        document.body.appendChild(cameraModal_1);
+                                        _a.label = 2;
+                                    case 2:
+                                        _a.trys.push([2, 4, , 5]);
+                                        return [4 /*yield*/, cameraModal_1.componentOnReady()];
+                                    case 3:
                                         _a.sent();
-                                        cameraModal.addEventListener('onPhoto', function (e) { return __awaiter(_this, void 0, void 0, function () {
+                                        cameraModal_1.addEventListener('onPhoto', function (e) { return __awaiter(_this, void 0, void 0, function () {
                                             var photo, _a;
                                             return __generator(this, function (_b) {
                                                 switch (_b.label) {
@@ -579,19 +587,90 @@ var capacitorPlugin = (function (exports) {
                                                         _a.apply(void 0, [_b.sent()]);
                                                         _b.label = 4;
                                                     case 4:
-                                                        cameraModal.dismiss();
-                                                        document.body.removeChild(cameraModal);
+                                                        cameraModal_1.dismiss();
+                                                        document.body.removeChild(cameraModal_1);
                                                         return [2 /*return*/];
                                                 }
                                             });
                                         }); });
-                                        cameraModal.present();
-                                        return [2 /*return*/];
+                                        cameraModal_1.present();
+                                        return [3 /*break*/, 5];
+                                    case 4:
+                                        e_1 = _a.sent();
+                                        this.fileInputExperience(options, resolve);
+                                        return [3 /*break*/, 5];
+                                    case 5: return [3 /*break*/, 7];
+                                    case 6:
+                                        console.error("Unable to load PWA Element 'pwa-camera-modal'. See the docs: https://capacitorjs.com/docs/pwa-elements.");
+                                        this.fileInputExperience(options, resolve);
+                                        _a.label = 7;
+                                    case 7: return [2 /*return*/];
                                 }
                             });
                         }); })];
                 });
             });
+        };
+        CameraPluginWeb.prototype.fileInputExperience = function (options, resolve) {
+            var input = document.querySelector('#_capacitor-camera-input');
+            var cleanup = function () {
+                input.parentNode && input.parentNode.removeChild(input);
+            };
+            if (!input) {
+                input = document.createElement('input');
+                input.id = '_capacitor-camera-input';
+                input.type = 'file';
+                document.body.appendChild(input);
+            }
+            input.accept = 'image/*';
+            input.capture = true;
+            if (options.source === CameraSource.Photos || options.source === CameraSource.Prompt) {
+                input.removeAttribute('capture');
+            }
+            else if (options.direction === CameraDirection.Front) {
+                input.capture = 'user';
+            }
+            else if (options.direction === CameraDirection.Rear) {
+                input.capture = 'environment';
+            }
+            input.addEventListener('change', function (_e) {
+                var file = input.files[0];
+                var format = 'jpeg';
+                if (file.type === 'image/png') {
+                    format = 'png';
+                }
+                else if (file.type === 'image/gif') {
+                    format = 'gif';
+                }
+                if (options.resultType === CameraResultType.DataUrl || options.resultType === CameraResultType.Base64) {
+                    var reader_1 = new FileReader();
+                    reader_1.addEventListener('load', function () {
+                        if (options.resultType === CameraResultType.DataUrl) {
+                            resolve({
+                                dataUrl: reader_1.result,
+                                format: format
+                            });
+                        }
+                        else if (options.resultType === CameraResultType.Base64) {
+                            var b64 = reader_1.result.split(',')[1];
+                            resolve({
+                                base64String: b64,
+                                format: format
+                            });
+                        }
+                        cleanup();
+                    });
+                    reader_1.readAsDataURL(file);
+                }
+                else {
+                    resolve({
+                        webPath: URL.createObjectURL(file),
+                        format: format
+                    });
+                    cleanup();
+                }
+            });
+            input.click();
         };
         CameraPluginWeb.prototype._getCameraPhoto = function (photo, options) {
             return new Promise(function (resolve, reject) {
@@ -1521,6 +1600,8 @@ var capacitorPlugin = (function (exports) {
                             platform: 'web',
                             appVersion: '',
                             appBuild: '',
+                            appId: '',
+                            appName: '',
                             operatingSystem: uaFields.operatingSystem,
                             osVersion: uaFields.osVersion,
                             manufacturer: navigator.vendor,
@@ -2038,8 +2119,6 @@ var capacitorPlugin = (function (exports) {
 
     const { remote } = require('electron');
     const path = require('path');
-    // serveur featherjs with socket.io and rest services
-    const app = require('../server/src/app');
     const fsu = require('fs-jetpack');
     class CapFeathersPluginWeb extends WebPlugin {
         constructor() {
@@ -2047,6 +2126,8 @@ var capacitorPlugin = (function (exports) {
                 name: 'CapFeathersPlugin',
                 platforms: ['electron']
             });
+            this.app = null;
+            this.feathersPath = null;
             this.feathersRef = null;
             this.port = null;
             this.start = false;
@@ -2064,24 +2145,47 @@ var capacitorPlugin = (function (exports) {
                 return options;
             });
         }
-        hasFeathers() {
-            console.log('init server !');
-            console.log('Path dir :', path.resolve('./server'));
-            console.log('File dir :', fsu.exists(path.resolve('./server')));
-            this.init = false;
-            if (fsu.exists(path.resolve('./server')) === 'dir') {
-                console.log('Implementaion de feathersjs possible !');
-                if (fsu.exists(path.resolve('./server/src/app.js')) === 'file') {
+        setFeathersPath(chemin) {
+            return __awaiter(this, void 0, void 0, function* () {
+                this.feathersPath = chemin;
+                try {
+                    this.app = require(`${this.feathersPath}/src/app`);
+                }
+                catch (error) {
+                    console.error('Initialisation impossible le fichier src/app.js dois exister!!');
+                    this.init = false;
+                }
+                if (fsu.exists(path.resolve(`${this.feathersPath}/src/app.js`)) === 'file') {
                     console.log('Initialisation possible !');
                     this.init = true;
+                }
+                else {
+                    console.error('Initialisation impossible le fichier src/app.js dois exister!!');
+                    this.init = false;
+                }
+            });
+        }
+        hasFeathers() {
+            console.log('init server !');
+            console.log('Path dir :', path.resolve(this.feathersPath)); //'./server'));
+            console.log('File dir :', fsu.exists(path.resolve(this.feathersPath))); //'./server')))
+            this.init = false;
+            if (fsu.exists(path.resolve(this.feathersPath)) === 'dir') {
+                console.log('Implementaion de feathersjs possible !');
+                if (fsu.exists(path.resolve(`${this.feathersPath}/src/app.js`)) === 'file') {
+                    console.log('Initialisation possible !');
+                    this.init = true;
+                }
+                else {
+                    console.error('Initialisation impossible le fichier src/app.js dois exister!!');
                 }
             }
             return this.init;
         }
         startServer() {
             return __awaiter(this, void 0, void 0, function* () {
-                if (this.hasFeathers()) {
-                    this.feathersRef = app.listen(app.get('port'));
+                if (this.init) {
+                    this.feathersRef = this.app.listen(this.app.get('port'));
                     this.start = true;
                 }
                 else {
@@ -2091,7 +2195,7 @@ var capacitorPlugin = (function (exports) {
         }
         stopServer() {
             return __awaiter(this, void 0, void 0, function* () {
-                if (this.hasFeathers()) {
+                if (this.init) {
                     this.feathersRef.close();
                     this.start = false;
                 }
@@ -2102,12 +2206,22 @@ var capacitorPlugin = (function (exports) {
         }
         getListenPort() {
             return __awaiter(this, void 0, void 0, function* () {
-                return app.get('port');
+                if (this.init) {
+                    return this.app.get('port');
+                }
+                else {
+                    console.error('You must generate featherjs app with name server in electron folder!!');
+                }
             });
         }
         isStart() {
             return __awaiter(this, void 0, void 0, function* () {
-                return this.start;
+                if (this.init) {
+                    return this.start;
+                }
+                else {
+                    console.error('You must generate featherjs app with name server in electron folder!!');
+                }
             });
         }
         getFeathersRef() {
@@ -2115,8 +2229,8 @@ var capacitorPlugin = (function (exports) {
         }
         setConfig(param, value) {
             return __awaiter(this, void 0, void 0, function* () {
-                if (this.hasFeathers()) {
-                    app.set(param, value);
+                if (this.init) {
+                    this.app.set(param, value);
                 }
                 else {
                     console.log('You must generate featherjs app with name server in electron folder!!');
@@ -2126,7 +2240,7 @@ var capacitorPlugin = (function (exports) {
         getConfig(param) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (this.hasFeathers()) {
-                    app.get(param);
+                    this.app.get(param);
                 }
                 else {
                     console.log('You must generate featherjs app with name server in electron folder!!');
@@ -2136,7 +2250,7 @@ var capacitorPlugin = (function (exports) {
         changePort(port) {
             return __awaiter(this, void 0, void 0, function* () {
                 if (this.hasFeathers()) {
-                    app.set('port', port);
+                    this.app.set('port', port);
                 }
                 else {
                     console.log('You must generate featherjs app with name server in electron folder!!');

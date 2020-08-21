@@ -2,8 +2,6 @@ import { __awaiter } from "tslib";
 import { WebPlugin } from '@capacitor/core';
 const { remote } = require('electron');
 const path = require('path');
-// serveur featherjs with socket.io and rest services
-const app = require('../server/src/app');
 const fsu = require('fs-jetpack');
 export class CapFeathersPluginWeb extends WebPlugin {
     constructor() {
@@ -11,6 +9,8 @@ export class CapFeathersPluginWeb extends WebPlugin {
             name: 'CapFeathersPlugin',
             platforms: ['electron']
         });
+        this.app = null;
+        this.feathersPath = null;
         this.feathersRef = null;
         this.port = null;
         this.start = false;
@@ -28,24 +28,47 @@ export class CapFeathersPluginWeb extends WebPlugin {
             return options;
         });
     }
-    hasFeathers() {
-        console.log('init server !');
-        console.log('Path dir :', path.resolve('./server'));
-        console.log('File dir :', fsu.exists(path.resolve('./server')));
-        this.init = false;
-        if (fsu.exists(path.resolve('./server')) === 'dir') {
-            console.log('Implementaion de feathersjs possible !');
-            if (fsu.exists(path.resolve('./server/src/app.js')) === 'file') {
+    setFeathersPath(chemin) {
+        return __awaiter(this, void 0, void 0, function* () {
+            this.feathersPath = chemin;
+            try {
+                this.app = require(`${this.feathersPath}/src/app`);
+            }
+            catch (error) {
+                console.error('Initialisation impossible le fichier src/app.js dois exister!!');
+                this.init = false;
+            }
+            if (fsu.exists(path.resolve(`${this.feathersPath}/src/app.js`)) === 'file') {
                 console.log('Initialisation possible !');
                 this.init = true;
+            }
+            else {
+                console.error('Initialisation impossible le fichier src/app.js dois exister!!');
+                this.init = false;
+            }
+        });
+    }
+    hasFeathers() {
+        console.log('init server !');
+        console.log('Path dir :', path.resolve(this.feathersPath)); //'./server'));
+        console.log('File dir :', fsu.exists(path.resolve(this.feathersPath))); //'./server')))
+        this.init = false;
+        if (fsu.exists(path.resolve(this.feathersPath)) === 'dir') {
+            console.log('Implementaion de feathersjs possible !');
+            if (fsu.exists(path.resolve(`${this.feathersPath}/src/app.js`)) === 'file') {
+                console.log('Initialisation possible !');
+                this.init = true;
+            }
+            else {
+                console.error('Initialisation impossible le fichier src/app.js dois exister!!');
             }
         }
         return this.init;
     }
     startServer() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.hasFeathers()) {
-                this.feathersRef = app.listen(app.get('port'));
+            if (this.init) {
+                this.feathersRef = this.app.listen(this.app.get('port'));
                 this.start = true;
             }
             else {
@@ -55,7 +78,7 @@ export class CapFeathersPluginWeb extends WebPlugin {
     }
     stopServer() {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.hasFeathers()) {
+            if (this.init) {
                 this.feathersRef.close();
                 this.start = false;
             }
@@ -66,12 +89,22 @@ export class CapFeathersPluginWeb extends WebPlugin {
     }
     getListenPort() {
         return __awaiter(this, void 0, void 0, function* () {
-            return app.get('port');
+            if (this.init) {
+                return this.app.get('port');
+            }
+            else {
+                console.error('You must generate featherjs app with name server in electron folder!!');
+            }
         });
     }
     isStart() {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.start;
+            if (this.init) {
+                return this.start;
+            }
+            else {
+                console.error('You must generate featherjs app with name server in electron folder!!');
+            }
         });
     }
     getFeathersRef() {
@@ -79,8 +112,8 @@ export class CapFeathersPluginWeb extends WebPlugin {
     }
     setConfig(param, value) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (this.hasFeathers()) {
-                app.set(param, value);
+            if (this.init) {
+                this.app.set(param, value);
             }
             else {
                 console.log('You must generate featherjs app with name server in electron folder!!');
@@ -90,7 +123,7 @@ export class CapFeathersPluginWeb extends WebPlugin {
     getConfig(param) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.hasFeathers()) {
-                app.get(param);
+                this.app.get(param);
             }
             else {
                 console.log('You must generate featherjs app with name server in electron folder!!');
@@ -100,7 +133,7 @@ export class CapFeathersPluginWeb extends WebPlugin {
     changePort(port) {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.hasFeathers()) {
-                app.set('port', port);
+                this.app.set('port', port);
             }
             else {
                 console.log('You must generate featherjs app with name server in electron folder!!');

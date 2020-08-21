@@ -6,6 +6,7 @@ declare module "@capacitor/core" {
 
 export interface CapFeathersPluginPlugin {
   echo(options: { value: string }): Promise<{value: string}>;
+  setFeathersPath(chemin:string): Promise<void>;
   startServer(): Promise<void>;
   stopServer(): Promise<void>;
   changePort(port: number): Promise<void>;

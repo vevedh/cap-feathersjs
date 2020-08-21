@@ -1,4 +1,6 @@
 import nodeResolve from 'rollup-plugin-node-resolve';
+//import copy from 'rollup-plugin-copy';
+
 
 export default {
   input: 'dist/esm/electron/src/index.js',
@@ -12,3 +14,4 @@ export default {
     nodeResolve()
   ]
 };
+
